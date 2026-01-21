@@ -1,6 +1,6 @@
 import java.util.*;
 
-// Class untuk merepresentasikan Node pada Pohon Huffman
+// Node Pohon Huffman
 class NodeHuffman implements Comparable<NodeHuffman> {
     char karakter;
     int frekuensi;
@@ -11,66 +11,55 @@ class NodeHuffman implements Comparable<NodeHuffman> {
         this.frekuensi = frekuensi;
     }
 
-    // Untuk mengurutkan berdasarkan frekuensi (priority queue)
     @Override
-    public int compareTo(NodeHuffman nodeLain) {
-        return this.frekuensi - nodeLain.frekuensi;
+    public int compareTo(NodeHuffman lain) {
+        return this.frekuensi - lain.frekuensi;
     }
 }
 
-public class HuffmanCode{
+public class HuffmanCode {
 
     private static Map<Character, String> kodeHuffman = new HashMap<>();
     private static NodeHuffman akar;
 
-    // ================== MEMBANGUN POHON HUFFMAN ==================
-    public static void bangunPohonHuffman(String teks) {
+    public static void bangunPohon(String teks) {
 
-        // Hitung frekuensi setiap karakter
         Map<Character, Integer> petaFrekuensi = new HashMap<>();
         for (char c : teks.toCharArray()) {
             petaFrekuensi.put(c, petaFrekuensi.getOrDefault(c, 0) + 1);
         }
 
-        // Masukkan semua node ke Priority Queue
-        PriorityQueue<NodeHuffman> antrianPrioritas = new PriorityQueue<>();
+        PriorityQueue<NodeHuffman> antrian = new PriorityQueue<>();
         for (Map.Entry<Character, Integer> data : petaFrekuensi.entrySet()) {
-            antrianPrioritas.add(new NodeHuffman(data.getKey(), data.getValue()));
+            antrian.add(new NodeHuffman(data.getKey(), data.getValue()));
         }
 
-        // Gabungkan node sampai tersisa satu akar
-        while (antrianPrioritas.size() > 1) {
-            NodeHuffman kiri = antrianPrioritas.poll();
-            NodeHuffman kanan = antrianPrioritas.poll();
+        while (antrian.size() > 1) {
+            NodeHuffman kiri = antrian.poll();
+            NodeHuffman kanan = antrian.poll();
 
-            NodeHuffman nodeBaru =
-                    new NodeHuffman('\0', kiri.frekuensi + kanan.frekuensi);
-            nodeBaru.kiri = kiri;
-            nodeBaru.kanan = kanan;
+            NodeHuffman baru = new NodeHuffman('\0', kiri.frekuensi + kanan.frekuensi);
+            baru.kiri = kiri;
+            baru.kanan = kanan;
 
-            antrianPrioritas.add(nodeBaru);
+            antrian.add(baru);
         }
 
-        akar = antrianPrioritas.poll();
-
-        // Buat kode Huffman dari pohon
-        buatKodeHuffman(akar, "");
+        akar = antrian.poll();
+        buatKode(akar, "");
     }
 
-    // ================== MEMBUAT KODE HUFFMAN ==================
-    private static void buatKodeHuffman(NodeHuffman node, String kode) {
+    private static void buatKode(NodeHuffman node, String kode) {
         if (node == null) return;
 
-        // Jika node daun, simpan kodenya
         if (node.kiri == null && node.kanan == null) {
             kodeHuffman.put(node.karakter, kode);
         }
 
-        buatKodeHuffman(node.kiri, kode + "0");
-        buatKodeHuffman(node.kanan, kode + "1");
+        buatKode(node.kiri, kode + "0");
+        buatKode(node.kanan, kode + "1");
     }
 
-    // ================== KOMPRESI ==================
     public static String kompres(String teks) {
         StringBuilder hasil = new StringBuilder();
         for (char c : teks.toCharArray()) {
@@ -79,19 +68,14 @@ public class HuffmanCode{
         return hasil.toString();
     }
 
-    // ================== DEKOMPRESI ==================
-    public static String dekompres(String dataTerkompresi) {
+    public static String dekompres(String data) {
         StringBuilder hasil = new StringBuilder();
         NodeHuffman sekarang = akar;
 
-        for (char bit : dataTerkompresi.toCharArray()) {
-            if (bit == '0') {
-                sekarang = sekarang.kiri;
-            } else {
-                sekarang = sekarang.kanan;
-            }
+        for (char bit : data.toCharArray()) {
+            if (bit == '0') sekarang = sekarang.kiri;
+            else sekarang = sekarang.kanan;
 
-            // Jika sampai di daun
             if (sekarang.kiri == null && sekarang.kanan == null) {
                 hasil.append(sekarang.karakter);
                 sekarang = akar;
@@ -100,24 +84,26 @@ public class HuffmanCode{
         return hasil.toString();
     }
 
-    // ================== PROGRAM UTAMA ==================
     public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
 
-        String teks = "hello";
+        System.out.print("Masukkan teks yang ingin di olah: ");
+        String teks = input.nextLine();
 
-        bangunPohonHuffman(teks);
+        bangunPohon(teks);
 
         String hasilKompresi = kompres(teks);
         String hasilDekompresi = dekompres(hasilKompresi);
 
-        System.out.println("Teks Asli       : " + teks);
-        System.out.println("Kode Huffman    : " + kodeHuffman);
-        System.out.println("Hasil Kompresi  : " + hasilKompresi);
+        System.out.println("\nKode Huffman:");
+        for (Map.Entry<Character, String> data : kodeHuffman.entrySet()) {
+            System.out.println(data.getKey() + " : " + data.getValue());
+        }
+
+        System.out.println("\nHasil Kompresi  : " + hasilKompresi);
         System.out.println("Hasil Dekompresi: " + hasilDekompresi);
 
-        double rasioKompresi =
-                (double) hasilKompresi.length() / (teks.length() * 8);
-
-        System.out.println("Rasio Kompresi  : " + rasioKompresi);
+        double rasio = (double) hasilKompresi.length() / (teks.length() * 8);
+        System.out.println("Rasio Kompresi  : " + rasio);
     }
 }
